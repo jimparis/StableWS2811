@@ -26,44 +26,44 @@
 
 #include <stdint.h>
 
-#define WS2811_RGB	0	// The WS2811 datasheet documents this way
-#define WS2811_RBG	1
-#define WS2811_GRB	2	// Most LED strips and WS2812 are wired this way
-#define WS2811_GBR	3
+#define WS2811_RGB      0       // The WS2811 datasheet documents this way
+#define WS2811_RBG      1
+#define WS2811_GRB      2       // Most LED strips and WS2812 are wired this way
+#define WS2811_GBR      3
 #define WS2811_COLOR_MASK 0x0f
 
-#define WS2811_800kHz 0x00	// Nearly all WS2811 are 800 kHz
-#define WS2811_400kHz 0x10	// Adafruit's Flora Pixels
+#define WS2811_800kHz 0x00      // Nearly all WS2811 are 800 kHz
+#define WS2811_400kHz 0x10      // Adafruit's Flora Pixels
 #define WS2811_FREQ_MASK 0x10
 
 class StableWS2811 {
 public:
-	/* pixelBuf must be (stripLen * 3) bytes
+        /* pixelBuf must be (stripLen * 3) bytes
            spiBuf must be (stripLen * 6) words, aligned in DMAMEM
            e.g.
            static DMAMEM uint32_t spiBuf[STRIP_LEN * 6];
            static uint8_t pixelBuf[STRIP_LEN * 3];
-	*/
-	StableWS2811(uint16_t stripLen, uint32_t *spiBuf, uint8_t *pixelBuf,
+        */
+        StableWS2811(uint16_t stripLen, uint32_t *spiBuf, uint8_t *pixelBuf,
                      uint8_t config = WS2811_GRB | WS2811_800kHz);
-	void begin(void);
+        void begin(void);
         void end(void);
 
-	void setPixel(uint32_t num, int color);
-	void setPixel(uint32_t num, uint8_t red, uint8_t green, uint8_t blue) {
-		setPixel(num, color(red, green, blue));
-	}
-	int getPixel(uint32_t num);
+        void setPixel(uint32_t num, int color);
+        void setPixel(uint32_t num, uint8_t red, uint8_t green, uint8_t blue) {
+                setPixel(num, color(red, green, blue));
+        }
+        int getPixel(uint32_t num);
 
-	void show(void);
-	int busy(void);
+        void show(void);
+        int busy(void);
 
-	int numPixels(void) {
-		return stripLen;
-	}
-	int color(uint8_t red, uint8_t green, uint8_t blue) {
-		return (red << 16) | (green << 8) | blue;
-	}
+        int numPixels(void) {
+                return stripLen;
+        }
+        int color(uint8_t red, uint8_t green, uint8_t blue) {
+                return (red << 16) | (green << 8) | blue;
+        }
 
         /* Update strip length.  New strip len must be less than or equal to the
            length provided in the constructor, and should only be changed
