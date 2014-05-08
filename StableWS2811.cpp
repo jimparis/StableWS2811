@@ -167,6 +167,39 @@ void StableWS2811::begin(void)
         SPI0.RSER = SPI_RSER_TFFF_RE | SPI_RSER_TFFF_DIRS;
 }
 
+void StableWS2811::end(void)
+{
+        // Wait for current update to finish
+        while (update_in_progress)
+                continue;
+
+        noInterrupts();
+        update_in_progress = 0;
+
+        // Stop DMA
+        DMA_TCD2_CSR = DMA_TCD_CSR_DREQ;
+        while ((DMA_TCD2_CSR & DMA_TCD_CSR_DONE) == 0)
+                continue;
+
+        // Disable everythign
+
+        SPI0.SR = SPI_SR_TFFF;
+        DMA_CERQ = 1;
+        DMA_CERQ = 2;
+        SPI0.RSER = 0;
+        NVIC_DISABLE_IRQ(IRQ_DMA_CH1);
+        DMAMUX0_CHCFG1 = 0;
+        DMAMUX0_CHCFG2 = 0;
+        DMA_CR = 0;
+        DMA_ERQ = 0;
+        CORE_PIN7_CONFIG = PORT_PCR_MUX(1);
+        SPI0.MCR = 0;
+        SIM_SCGC6 &= ~(SIM_SCGC6_SPI0 | SIM_SCGC6_DMAMUX);
+        SIM_SCGC7 &= ~(SIM_SCGC7_DMA);
+
+        interrupts();
+}
+
 void dma_ch1_isr(void)
 {
 	DMA_CINT = 1;

@@ -47,6 +47,7 @@ public:
 	StableWS2811(uint16_t stripLen, uint32_t *spiBuf, uint8_t *pixelBuf,
                      uint8_t config = WS2811_GRB | WS2811_800kHz);
 	void begin(void);
+        void end(void);
 
 	void setPixel(uint32_t num, int color);
 	void setPixel(uint32_t num, uint8_t red, uint8_t green, uint8_t blue) {
