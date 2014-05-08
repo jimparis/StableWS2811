@@ -97,7 +97,7 @@ void StableWS2811::begin(void)
         SIM_SCGC6 |= SIM_SCGC6_SPI0 | SIM_SCGC6_DMAMUX;
         SIM_SCGC7 |= SIM_SCGC7_DMA;
 
-	// Set up SPI0 in continuous SCK mode, 12 bit frames, and clock
+        // Set up SPI0 in continuous SCK mode, 12 bit frames, and clock
         // at 3 * WS2811 frequency.
         SPI0.MCR = SPI_MCR_MSTR |
                 SPI_MCR_CONT_SCKE |
@@ -130,47 +130,47 @@ void StableWS2811::begin(void)
         SPI0.MCR &= ~(SPI_MCR_HALT | SPI_MCR_MDIS);
 
         // Configure DMA
-	DMA_CR = 0;
-	DMA_ERQ = 0;
+        DMA_CR = 0;
+        DMA_ERQ = 0;
 
-	// DMA channel #1 copies SPI data, triggers ISR when done
+        // DMA channel #1 copies SPI data, triggers ISR when done
         DMA_TCD1_SADDR = spiBuf;
         DMA_TCD1_SOFF = 4;
         DMA_TCD1_ATTR = DMA_TCD_ATTR_SSIZE(2) | DMA_TCD_ATTR_DSIZE(2);
-	DMA_TCD1_NBYTES_MLNO = 4;
+        DMA_TCD1_NBYTES_MLNO = 4;
         DMA_TCD1_SLAST = -spi_bufsize_bytes;
         DMA_TCD1_DADDR = &SPI0_PUSHR;
-	DMA_TCD1_DOFF = 0;
+        DMA_TCD1_DOFF = 0;
         DMA_TCD1_CITER_ELINKNO = spi_bufsize_words;
-	DMA_TCD1_BITER_ELINKNO = spi_bufsize_words;
-	DMA_TCD1_DLASTSGA = 0;
-	DMA_TCD1_CSR = DMA_TCD_CSR_DREQ | DMA_TCD_CSR_INTMAJOR;
+        DMA_TCD1_BITER_ELINKNO = spi_bufsize_words;
+        DMA_TCD1_DLASTSGA = 0;
+        DMA_TCD1_CSR = DMA_TCD_CSR_DREQ | DMA_TCD_CSR_INTMAJOR;
 
-	// DMA channel #2 always writes zeros
-	DMA_TCD2_SADDR = &zero;
-	DMA_TCD2_SOFF = 0;
-	DMA_TCD2_ATTR = DMA_TCD_ATTR_SSIZE(2) | DMA_TCD_ATTR_DSIZE(2);
-	DMA_TCD2_NBYTES_MLNO = 4;
-	DMA_TCD2_SLAST = 0;
-	DMA_TCD2_DADDR = &SPI0_PUSHR;
-	DMA_TCD2_DOFF = 0;
-	DMA_TCD2_CITER_ELINKNO = 1;
-	DMA_TCD2_BITER_ELINKNO = 1;
-	DMA_TCD2_DLASTSGA = 0;
-	DMA_TCD2_CSR = 0;
+        // DMA channel #2 always writes zeros
+        DMA_TCD2_SADDR = &zero;
+        DMA_TCD2_SOFF = 0;
+        DMA_TCD2_ATTR = DMA_TCD_ATTR_SSIZE(2) | DMA_TCD_ATTR_DSIZE(2);
+        DMA_TCD2_NBYTES_MLNO = 4;
+        DMA_TCD2_SLAST = 0;
+        DMA_TCD2_DADDR = &SPI0_PUSHR;
+        DMA_TCD2_DOFF = 0;
+        DMA_TCD2_CITER_ELINKNO = 1;
+        DMA_TCD2_BITER_ELINKNO = 1;
+        DMA_TCD2_DLASTSGA = 0;
+        DMA_TCD2_CSR = 0;
 
         // Give DMA channel #1 priority over #2
         DMA_DCHPRI1 = 2;
         DMA_DCHPRI2 = 1;
 
-	// Route the SPI0 transmit DMA request to both channels
-	DMAMUX0_CHCFG1 = 0;
-	DMAMUX0_CHCFG1 = DMAMUX_SOURCE_SPI0_TX | DMAMUX_ENABLE;
-	DMAMUX0_CHCFG2 = 0;
-	DMAMUX0_CHCFG2 = DMAMUX_SOURCE_SPI0_TX | DMAMUX_ENABLE;
+        // Route the SPI0 transmit DMA request to both channels
+        DMAMUX0_CHCFG1 = 0;
+        DMAMUX0_CHCFG1 = DMAMUX_SOURCE_SPI0_TX | DMAMUX_ENABLE;
+        DMAMUX0_CHCFG2 = 0;
+        DMAMUX0_CHCFG2 = DMAMUX_SOURCE_SPI0_TX | DMAMUX_ENABLE;
 
-	// Enable interrupt when channel #1 completes
-	NVIC_ENABLE_IRQ(IRQ_DMA_CH1);
+        // Enable interrupt when channel #1 completes
+        NVIC_ENABLE_IRQ(IRQ_DMA_CH1);
 
         // Enable DMA channel #2 to send zeros when SPI needs them
         DMA_SERQ = 2;
@@ -214,19 +214,19 @@ void StableWS2811::end(void)
 
 void dma_ch1_isr(void)
 {
-	DMA_CINT = 1;
-	update_completed_at = micros();
-	update_in_progress = 0;
+        DMA_CINT = 1;
+        update_completed_at = micros();
+        update_in_progress = 0;
 }
 
 int StableWS2811::busy(void)
 {
-	if (update_in_progress)
+        if (update_in_progress)
                 return 1;
-	// Busy for 50 us after spiBuf is transferred, for WS2811 reset
-	if (micros() - update_completed_at < 50)
+        // Busy for 50 us after spiBuf is transferred, for WS2811 reset
+        if (micros() - update_completed_at < 50)
                 return 1;
-	return 0;
+        return 0;
 }
 
 /* Map a 4 bit nibble into a 12 bit value to be written to the SPI bus */
@@ -241,7 +241,7 @@ void StableWS2811::show(void)
 {
         int i;
 
-	// Wait for prior DMA operations to complete
+        // Wait for prior DMA operations to complete
         while (update_in_progress)
                 continue;
 
@@ -255,11 +255,11 @@ void StableWS2811::show(void)
         }
 
         // Wait for WS2811 reset
-	while (micros() - update_completed_at < 50)
+        while (micros() - update_completed_at < 50)
                 continue;
 
         noInterrupts();
-	update_in_progress = 1;
+        update_in_progress = 1;
 
         // Ensure DMA channel #2 has stopped
         DMA_TCD2_CSR = DMA_TCD_CSR_DREQ;
@@ -272,7 +272,7 @@ void StableWS2811::show(void)
         SPI0.SR = SPI_SR_TFFF;
 
         // Enable both DMA channels
-	DMA_TCD2_CSR = 0;
+        DMA_TCD2_CSR = 0;
         DMA_SERQ = 1;
         DMA_SERQ = 2;
         interrupts();
