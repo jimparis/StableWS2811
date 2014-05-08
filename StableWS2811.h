@@ -65,11 +65,17 @@ public:
 		return (red << 16) | (green << 8) | blue;
 	}
 
+        /* Update strip length.  New strip len must be less than or equal to the
+           length provided in the constructor, and should only be changed
+           before begin() or after end(). */
+        void setStripLen(uint16_t newStripLen);
+
 private:
-	uint16_t stripLen;
-	uint32_t *spiBuf;
-	uint8_t *pixelBuf;
-	uint8_t config;
+        uint16_t stripLenMax;
+        uint16_t stripLen;
+        uint32_t *spiBuf;
+        uint8_t *pixelBuf;
+        uint8_t config;
 };
 
 #endif

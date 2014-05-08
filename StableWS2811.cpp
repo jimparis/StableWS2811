@@ -59,13 +59,25 @@ static uint32_t update_completed_at = 0;
    It may be possible to reduce this with clever DMA chaining, but it's
    not clear.
 */
-StableWS2811::StableWS2811(uint16_t stripLen, uint32_t *spiBuf,
+StableWS2811::StableWS2811(uint16_t stripLenMax, uint32_t *spiBuf,
                            uint8_t *pixelBuf, uint8_t config)
 {
-	this->stripLen = stripLen;
-	this->spiBuf = spiBuf;
+        this->stripLenMax = stripLenMax;
+        this->stripLen = stripLenMax;
+        this->spiBuf = spiBuf;
         this->pixelBuf = pixelBuf;
         this->config = config;
+}
+
+/* Update strip length.  New strip len must be less than or equal to the
+   length provided in the constructor, and should only be changed
+   before begin() or after end(). */
+void StableWS2811::setStripLen(uint16_t newStripLen)
+{
+        if (newStripLen > stripLenMax)
+                stripLen = stripLenMax;
+        else
+                stripLen = newStripLen;
 }
 
 void StableWS2811::begin(void)
