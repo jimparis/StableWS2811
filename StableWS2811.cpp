@@ -193,7 +193,7 @@ void StableWS2811::end(void)
         while ((DMA_TCD2_CSR & DMA_TCD_CSR_DONE) == 0)
                 continue;
 
-        // Disable everythign
+        // Disable everything
 
         SPI0.SR = SPI_SR_TFFF;
         DMA_CERQ = 1;
