@@ -16,11 +16,11 @@ Drawbacks:
 
 * Only one single output, versus OctoWS2811's eight parallel outputs
 * To drive N LEDs, requires (27 * N) bytes of RAM
-* Uses SPI0
+* Uses SPI1
 
 Usage:
 
 * Copy to Arduino `libraries` directory
 * Restart Arduino IDE
 * File → Examples → StableWS2811 → FlickerTest
-* Adjust `stripLen` and connect your strip to Teensy pin 7 (OctoWS2811 adapter output #3)
+* Adjust `stripLen` and connect your strip to Teensy pin 0

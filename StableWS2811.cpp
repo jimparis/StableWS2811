@@ -27,6 +27,12 @@
 
 #define SPI_PUSHR_DATA(x) (SPI_PUSHR_CONT | SPI_PUSHR_CTAS(0) | (x))
 
+#ifndef SPI1
+#define SPI1 (*(SPI_t *)0x4002D000)
+#define SPI1_PUSHR *(volatile uint32_t *)0x4002D034
+#define DMAMUX_SOURCE_SPI1_TX 19
+#endif
+
 static DMAMEM uint32_t zero; /* note: can't initialize DMAMEM variables here */
 static volatile uint8_t update_in_progress = 0;
 static uint32_t update_completed_at = 0;
@@ -93,13 +99,13 @@ void StableWS2811::begin(void)
                 spiBuf[i] = SPI_PUSHR_DATA(0);
         zero = SPI_PUSHR_DATA(0);
 
-        // Enable clocks to SPI0, DMA, and DMAMUX controllers
-        SIM_SCGC6 |= SIM_SCGC6_SPI0 | SIM_SCGC6_DMAMUX;
+        // Enable clocks to SPI1, DMA, and DMAMUX controllers
+        SIM_SCGC6 |= SIM_SCGC6_SPI1 | SIM_SCGC6_DMAMUX;
         SIM_SCGC7 |= SIM_SCGC7_DMA;
 
-        // Set up SPI0 in continuous SCK mode, 12 bit frames, and clock
+        // Set up SPI1 in continuous SCK mode, 12 bit frames, and clock
         // at 3 * WS2811 frequency.
-        SPI0.MCR = SPI_MCR_MSTR |
+        SPI1.MCR = SPI_MCR_MSTR |
                 SPI_MCR_CONT_SCKE |
                 SPI_MCR_PCSIS(0x1F) |
                 SPI_MCR_MDIS |
@@ -123,11 +129,11 @@ void StableWS2811::begin(void)
 #else
         #error Unsupported F_BUS
 #endif
-        SPI0.CTAR0 = ctar;
+        SPI1.CTAR0 = ctar;
 
-        // Map SPI0 MOSI to pin 7 and enable module
-        CORE_PIN7_CONFIG = PORT_PCR_MUX(2);
-        SPI0.MCR &= ~(SPI_MCR_HALT | SPI_MCR_MDIS);
+        // Map SPI1 MOSI to pin 0 and enable module
+        CORE_PIN0_CONFIG = PORT_PCR_MUX(2);
+        SPI1.MCR &= ~(SPI_MCR_HALT | SPI_MCR_MDIS);
 
         // Configure DMA
         DMA_CR = 0;
@@ -139,7 +145,7 @@ void StableWS2811::begin(void)
         DMA_TCD1_ATTR = DMA_TCD_ATTR_SSIZE(2) | DMA_TCD_ATTR_DSIZE(2);
         DMA_TCD1_NBYTES_MLNO = 4;
         DMA_TCD1_SLAST = -spi_bufsize_bytes;
-        DMA_TCD1_DADDR = &SPI0_PUSHR;
+        DMA_TCD1_DADDR = &SPI1_PUSHR;
         DMA_TCD1_DOFF = 0;
         DMA_TCD1_CITER_ELINKNO = spi_bufsize_words;
         DMA_TCD1_BITER_ELINKNO = spi_bufsize_words;
@@ -152,7 +158,7 @@ void StableWS2811::begin(void)
         DMA_TCD2_ATTR = DMA_TCD_ATTR_SSIZE(2) | DMA_TCD_ATTR_DSIZE(2);
         DMA_TCD2_NBYTES_MLNO = 4;
         DMA_TCD2_SLAST = 0;
-        DMA_TCD2_DADDR = &SPI0_PUSHR;
+        DMA_TCD2_DADDR = &SPI1_PUSHR;
         DMA_TCD2_DOFF = 0;
         DMA_TCD2_CITER_ELINKNO = 1;
         DMA_TCD2_BITER_ELINKNO = 1;
@@ -163,11 +169,11 @@ void StableWS2811::begin(void)
         DMA_DCHPRI1 = 2;
         DMA_DCHPRI2 = 1;
 
-        // Route the SPI0 transmit DMA request to both channels
+        // Route the SPI1 transmit DMA request to both channels
         DMAMUX0_CHCFG1 = 0;
-        DMAMUX0_CHCFG1 = DMAMUX_SOURCE_SPI0_TX | DMAMUX_ENABLE;
+        DMAMUX0_CHCFG1 = DMAMUX_SOURCE_SPI1_TX | DMAMUX_ENABLE;
         DMAMUX0_CHCFG2 = 0;
-        DMAMUX0_CHCFG2 = DMAMUX_SOURCE_SPI0_TX | DMAMUX_ENABLE;
+        DMAMUX0_CHCFG2 = DMAMUX_SOURCE_SPI1_TX | DMAMUX_ENABLE;
 
         // Enable interrupt when channel #1 completes
         NVIC_ENABLE_IRQ(IRQ_DMA_CH1);
@@ -175,8 +181,8 @@ void StableWS2811::begin(void)
         // Enable DMA channel #2 to send zeros when SPI needs them
         DMA_SERQ = 2;
 
-        // Enable SPI0 TFFF DMA requests
-        SPI0.RSER = SPI_RSER_TFFF_RE | SPI_RSER_TFFF_DIRS;
+        // Enable SPI1 TFFF DMA requests
+        SPI1.RSER = SPI_RSER_TFFF_RE | SPI_RSER_TFFF_DIRS;
 }
 
 void StableWS2811::end(void)
@@ -195,18 +201,18 @@ void StableWS2811::end(void)
 
         // Disable everything
 
-        SPI0.SR = SPI_SR_TFFF;
+        SPI1.SR = SPI_SR_TFFF;
         DMA_CERQ = 1;
         DMA_CERQ = 2;
-        SPI0.RSER = 0;
+        SPI1.RSER = 0;
         NVIC_DISABLE_IRQ(IRQ_DMA_CH1);
         DMAMUX0_CHCFG1 = 0;
         DMAMUX0_CHCFG2 = 0;
         DMA_CR = 0;
         DMA_ERQ = 0;
-        CORE_PIN7_CONFIG = PORT_PCR_MUX(1);
-        SPI0.MCR = 0;
-        SIM_SCGC6 &= ~(SIM_SCGC6_SPI0 | SIM_SCGC6_DMAMUX);
+        CORE_PIN0_CONFIG = PORT_PCR_MUX(1);
+        SPI1.MCR = 0;
+        SIM_SCGC6 &= ~(SIM_SCGC6_SPI1 | SIM_SCGC6_DMAMUX);
         SIM_SCGC7 &= ~(SIM_SCGC7_DMA);
 
         interrupts();
@@ -269,7 +275,7 @@ void StableWS2811::show(void)
         // Make sure SPI hardware's TFFF flag updates correctly.
         // Sometimes the last DMA transfer from channel #2 doesn't do
         // this.
-        SPI0.SR = SPI_SR_TFFF;
+        SPI1.SR = SPI_SR_TFFF;
 
         // Enable both DMA channels
         DMA_TCD2_CSR = 0;
