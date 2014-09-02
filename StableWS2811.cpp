@@ -113,6 +113,13 @@ void StableWS2811::begin(void)
         else
                 // (48 Mhz / 5) * (1 + 0 / 4) = 2.4 MHz
                 ctar |= SPI_CTAR_PBR(2) | SPI_CTAR_BR(1);
+#elif F_BUS == 36000000
+        if ((config & WS2811_FREQ_MASK) == WS2811_400kHz)
+                // (36 Mhz / 5) * ((1 + 0) / 6) = 1.2 MHz
+                ctar |= SPI_CTAR_PBR(2) | SPI_CTAR_BR(2);
+        else
+                // (36 Mhz / 5) * ((1 + 1) / 6) = 2.4 MHz
+                ctar |= SPI_CTAR_PBR(2) | SPI_CTAR_BR(2) | SPI_CTAR_DBR;
 #elif F_BUS == 24000000
         if ((config & WS2811_FREQ_MASK) == WS2811_400kHz)
                 // (24 Mhz / 5) * (1 + 0 / 4) = 1.2 MHz
