@@ -99,7 +99,7 @@ void StableWS2811::begin(void)
 
         // Set up SPI0 in continuous SCK mode, 12 bit frames, and clock
         // at 3 * WS2811 frequency.
-        SPI0.MCR = SPI_MCR_MSTR |
+        SPI0_MCR = SPI_MCR_MSTR |
                 SPI_MCR_CONT_SCKE |
                 SPI_MCR_PCSIS(0x1F) |
                 SPI_MCR_MDIS |
@@ -130,11 +130,11 @@ void StableWS2811::begin(void)
 #else
         #error Unsupported F_BUS
 #endif
-        SPI0.CTAR0 = ctar;
+        SPI0_CTAR0 = ctar;
 
         // Map SPI0 MOSI to pin 7 and enable module
         CORE_PIN7_CONFIG = PORT_PCR_MUX(2);
-        SPI0.MCR &= ~(SPI_MCR_HALT | SPI_MCR_MDIS);
+        SPI0_MCR &= ~(SPI_MCR_HALT | SPI_MCR_MDIS);
 
         // Configure DMA
         DMA_CR = 0;
@@ -183,7 +183,7 @@ void StableWS2811::begin(void)
         DMA_SERQ = 2;
 
         // Enable SPI0 TFFF DMA requests
-        SPI0.RSER = SPI_RSER_TFFF_RE | SPI_RSER_TFFF_DIRS;
+        SPI0_RSER = SPI_RSER_TFFF_RE | SPI_RSER_TFFF_DIRS;
 }
 
 void StableWS2811::end(void)
@@ -202,17 +202,17 @@ void StableWS2811::end(void)
 
         // Disable everything
 
-        SPI0.SR = SPI_SR_TFFF;
+        SPI0_SR = SPI_SR_TFFF;
         DMA_CERQ = 1;
         DMA_CERQ = 2;
-        SPI0.RSER = 0;
+        SPI0_RSER = 0;
         NVIC_DISABLE_IRQ(IRQ_DMA_CH1);
         DMAMUX0_CHCFG1 = 0;
         DMAMUX0_CHCFG2 = 0;
         DMA_CR = 0;
         DMA_ERQ = 0;
         CORE_PIN7_CONFIG = PORT_PCR_MUX(1);
-        SPI0.MCR = 0;
+        SPI0_MCR = 0;
         SIM_SCGC6 &= ~(SIM_SCGC6_SPI0 | SIM_SCGC6_DMAMUX);
         SIM_SCGC7 &= ~(SIM_SCGC7_DMA);
 
@@ -276,7 +276,7 @@ void StableWS2811::show(void)
         // Make sure SPI hardware's TFFF flag updates correctly.
         // Sometimes the last DMA transfer from channel #2 doesn't do
         // this.
-        SPI0.SR = SPI_SR_TFFF;
+        SPI0_SR = SPI_SR_TFFF;
 
         // Enable both DMA channels
         DMA_TCD2_CSR = 0;
